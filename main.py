@@ -1,7 +1,7 @@
 import os
 from stability_sdk import client
 from flask import Flask, request, send_file, make_response, jsonify
-from views import generateImage, compareImages
+from views import generateImage, compareImages, isFaceInImage
 import uuid
 from flask_cors import CORS
 import csv
@@ -69,6 +69,7 @@ def matchImage():
                 )
                 response.headers.add('Access-Control-Expose-Headers',
                                      'Content-Disposition , Set-Cookie')
+                # add person details to the response
 
                 return response
 
@@ -86,6 +87,45 @@ def getImagePerson():
             if file['image'] == image_name:
                 result = compareImages(
                     f'./persons/{file["image"]}', f'./images/{image_name}')
+                return jsonify(file), 200
+
+    return 'No match found', 404
+
+
+@app.route('/match-image', methods=['POST'])
+def matchImagePerson():
+    if 'image' not in request.files:
+        return 'No image file provided', 400
+
+    image_file = request.files['image']
+    image_name = uuid.uuid4().hex + '.png'
+    print(image_name)
+    image_file.save(f'./uploaded/{image_name}')
+    if not isFaceInImage(f'./uploaded/{image_name}'):
+        return 'No face found in image', 401
+    with open('data.json', 'r') as json_data_file:
+        data = json.load(json_data_file)
+        for file in data:
+            result = compareImages(f'./persons/{file["image"]}',
+                                   f'./uploaded/{image_name}')
+            if result.get('verified'):
+                response = send_file(
+                    f'./persons/{file["image"]}', mimetype='image/png', as_attachment=True, download_name=file['image']
+                )
+                response.headers.add('Access-Control-Expose-Headers',
+                                     'Content-Disposition , Set-Cookie')
+                return response
+    return 'File uploaded successfully'
+
+
+@app.route('/match-image-details', methods=['GET'])
+def matchImageDetails():
+
+    image_file_name = request.args.get('image_name')
+    with open('data.json', 'r') as json_data_file:
+        data = json.load(json_data_file)
+        for file in data:
+            if file['image'] == image_file_name:
                 return jsonify(file), 200
 
     return 'No match found', 404

@@ -44,3 +44,14 @@ def compareImages(img_1_addr, img_2_addr):
         result = {'verified': False, 'distance': 1, 'threshold': 0.4}
 
     return result
+
+
+def isFaceInImage(img_addr):
+    # Load the two images
+    img = cv2.imread(img_addr)
+    try:
+        result = DeepFace.extract_faces(img_addr, detector_backend='opencv')
+    except:
+        return False
+
+    return True
