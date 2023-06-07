@@ -34,16 +34,20 @@ def generateImages():
     seed = request.form.get('seed')
     # generate a random image name
     random_image_name = str(uuid.uuid4())
+
     # Set up our initial generation parameters.
     # generateImage(stability_api, prompt, random_image_name)
+
     # write log file
     with open('log.csv', 'a') as log:
         log_writer = csv.writer(
             log, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         log_writer.writerow(
             [request.remote_addr, prompt, seed, random_image_name])
-    # return send_file(f'./images/{random_image_name}.png', mimetype='image/png')
+    # response = send_file(
+    #     f'./images/{random_image_name}.png', mimetype='image/png', as_attachment=True, download_name=f'{random_image_name}.png')
     # time.sleep(3)
+
     response = send_file(
         f'./images/0ba34621-12b0-4586-a02e-e74a87d4fdd8.png', mimetype='image/png', as_attachment=True, download_name=f'0ba34621-12b0-4586-a02e-e74a87d4fdd8.png')
 
@@ -129,6 +133,17 @@ def matchImageDetails():
                 return jsonify(file), 200
 
     return 'No match found', 404
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    username = request.form.get('username')
+    password = request.form.get('password')
+    if username != 'admin' or password != 'admin':
+        return {'message': 'Invalid credentials'}, 401
+    return {'message': 'Login successful',
+            'token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImpvaG5kb2UiLCJpYXQiOjE2MjU0NjQ'
+            }, 200
 
 
 if __name__ == '__main__':
